@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .topbar { background: #111827; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .nav a { color: #d1d5db; text-decoration: none; margin-left: 16px; }
+        .container { max-width: 520px; margin: 40px auto; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+        input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #d1d5db; }
+        button { background: #2563eb; color: white; border: none; font-weight: bold; }
+        .error { background: #fee2e2; color: #991b1b; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div style="font-weight:bold;">MockInterview Admin</div>
+        <div class="nav">
+            <a href="{% url 'admin_dashboard' %}">Overview</a>
+            <a href="{% url 'admin_users' %}">Users</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <h2>Create Candidate User</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email (optional)">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Create User</button>
+        </form>
+    </div>
+</body>
+</html>

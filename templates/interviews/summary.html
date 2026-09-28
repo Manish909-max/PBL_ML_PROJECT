@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Summary - AI Mock Interview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8f9fa; color: #1a1a1a; }
+        
+        header { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .navbar { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
+        nav a { margin-left: 24px; text-decoration: none; color: #666; }
+        nav a:hover { color: #2563eb; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+        
+        .header { background: white; border-radius: 10px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 32px; }
+        .title { font-size: 32px; margin-bottom: 16px; }
+        .meta { display: flex; gap: 20px; color: #666; font-size: 14px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+        .stat-number { font-size: 32px; font-weight: bold; color: #2563eb; }
+        .stat-label { color: #666; font-size: 14px; margin-top: 8px; }
+        
+        .responses-section { margin-bottom: 40px; }
+        .section-title { font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        
+        .response-item { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .response-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px; }
+        .question-label { font-size: 14px; color: #666; font-weight: 600; }
+        .question-text { font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+        
+        .answer-label { font-size: 14px; color: #666; font-weight: 600; margin-top: 16px; margin-bottom: 8px; }
+        .answer-text { background: #f8f9fa; padding: 12px; border-radius: 6px; line-height: 1.6; }
+        
+        .confidence-badge { display: inline-block; padding: 6px 12px; background: #e0e7ff; color: #2563eb; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        
+        .btn { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; transition: background 0.3s; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        
+        .actions { display: flex; gap: 12px; margin-top: 32px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="logo">📝 MockInterview AI</div>
+            <nav>
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'logout' %}">Logout ({{ user.username }})</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin_dashboard' %}" style="color: #dc2626; font-weight: bold;">Admin Dashboard</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="header">
+            <div class="title">✅ Interview Complete!</div>
+            <div class="meta">
+                <span>📚 {{ session.interview_template.get_topic_display }}</span>
+                <span>📊 {{ session.interview_template.get_difficulty_display }}</span>
+                <span>⏱️ Completed on {{ session.ended_at|date:"M d, Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ answered_questions }}/{{ total_questions }}</div>
+                <div class="stat-label">Questions Answered</div>
+            </div>
+            {% if analysis.score %}
+                <div class="stat-card">
+                    <div class="stat-number">{{ analysis.score|floatformat:1 }}%</div>
+                    <div class="stat-label">AI Performance Score</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="response-item" style="margin-bottom: 30px; background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);">
+            <div class="response-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 12px;">
+                <div>
+                    <div class="question-label">AI Interview Analysis</div>
+                    <div class="question-text" style="margin-bottom: 8px;">{{ analysis.verdict }}</div>
+                </div>
+                <span class="confidence-badge">{{ analysis.score|floatformat:1 }}% score</span>
+            </div>
+            <p style="margin: 10px 0 14px; line-height: 1.7;">{{ analysis.summary }}</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div>
+                    <div class="answer-label">Completion</div>
+                    <div class="answer-text">{{ analysis.completion_rate }}% of questions answered</div>
+                </div>
+                <div>
+                    <div class="answer-label">Avg confidence</div>
+                    <div class="answer-text">{{ analysis.avg_confidence }}/5</div>
+                </div>
+                <div>
+                    <div class="answer-label">Avg words per answer</div>
+                    <div class="answer-text">{{ analysis.avg_words }}</div>
+                </div>
+            </div>
+            <div style="margin-top: 18px;">
+                <div class="answer-label">Risk indicators</div>
+                {% if analysis.risks %}
+                    <ul>
+                        {% for risk in analysis.risks %}
+                            <li>{{ risk }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="answer-text">No major anomalies detected.</div>
+                {% endif %}
+            </div>
+            <div style="margin-top: 18px;">
+                <div class="answer-label">Recommendations</div>
+                <ul>
+                    {% for item in analysis.suggestions %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if ai_analysis %}
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <div class="answer-label" style="font-size: 16px; color: #1e40af;">🤖 Detailed Gemini AI Feedback</div>
+                <div style="margin-top: 12px; color: #334155; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">{{ ai_analysis }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="responses-section">
+            <h2 class="section-title">Your Responses</h2>
+            {% if responses %}
+                {% for response in responses %}
+                    <div class="response-item">
+                        <div class="response-header">
+                            <div>
+                                <div class="question-label">Question {{ response.question.order }}</div>
+                                <div class="question-text">{{ response.question.text }}</div>
+                            </div>
+                            <span class="confidence-badge">
+                                {% if response.confidence_level == 5 %}😄 Very High{% elif response.confidence_level == 4 %}🙂 High{% elif response.confidence_level == 3 %}😐 Medium{% elif response.confidence_level == 2 %}😕 Low{% else %}😟 Very Low{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div>
+                            <div class="answer-label">Your Answer:</div>
+                            <div class="answer-text">{{ response.response_text }}</div>
+                        </div>
+                        
+                        {% if response.feedback %}
+                        <div style="margin-top: 20px; padding: 16px; background: #f5f3ff; border-left: 4px solid #8b5cf6; border-radius: 6px;">
+                            <div class="answer-label" style="color: #6d28d9; margin-top: 0;">✨ AI Evaluation (Score: {{ response.score|floatformat:0 }}%)</div>
+                            <div style="color: #4c1d95; line-height: 1.6; font-size: 15px;">
+                                {{ response.feedback }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No responses recorded.</p>
+            {% endif %}
+        </div>
+        
+        <div class="actions">
+            <a href="{% url 'home' %}" class="btn">Take Another Interview</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ interview.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f8fafc; color: #1f2937; }
+        .container { max-width: 900px; margin: 40px auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .meta { color: #4b5563; margin-bottom: 24px; }
+        ul { padding-left: 20px; }
+        .button { display: inline-block; background: #2563eb; color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ interview.title }}</h1>
+        <div class="meta">
+            <p><strong>Topic:</strong> {{ interview.get_topic_display }}</p>
+            <p><strong>Difficulty:</strong> {{ interview.get_difficulty_display }}</p>
+            <p><strong>Status:</strong> {{ interview.get_status_display }}</p>
+        </div>
+
+        <h3>Questions</h3>
+        <ul>
+            {% for question in interview.questions %}
+                <li>{{ question.order }}. {{ question.text }}</li>
+            {% empty %}
+                <li>No questions available for this interview yet.</li>
+            {% endfor %}
+        </ul>
+
+        <a class="button" href="{% url 'start_interview' interview.pk %}">Start this Interview</a>
+    </div>
+</body>
+</html>

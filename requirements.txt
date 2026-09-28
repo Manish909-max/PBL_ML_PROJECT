@@ -1,0 +1,11 @@
+Django>=5.2,<5.3
+djangorestframework
+channels
+psycopg[binary]
+python-dotenv
+django-cors-headers
+gunicorn
+whitenoise
+openai
+requests
+graphene-django

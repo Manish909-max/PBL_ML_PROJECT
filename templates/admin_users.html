@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Users</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .topbar { background: #111827; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 20px; font-weight: bold; }
+        .nav a { color: #d1d5db; text-decoration: none; margin-left: 16px; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); padding: 24px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; }
+        .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+        .green { background: #dcfce7; color: #166534; }
+        .red { background: #fee2e2; color: #991b1b; }
+        .btn { display: inline-block; padding: 10px 16px; border-radius: 8px; text-decoration: none; color: white; background: #2563eb; }
+        .btn.warning { background: #dc2626; }
+        .actions { display: flex; gap: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">MockInterview Admin</div>
+        <div class="nav">
+            <a href="{% url 'admin_dashboard' %}">Overview</a>
+            <a href="{% url 'admin_users' %}">Users</a>
+            <a href="{% url 'admin_interviews' %}">Interviews</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="actions">
+                <a class="btn" href="{% url 'admin_user_create' %}">Create User</a>
+                <a class="btn secondary" href="{% url 'admin_dashboard' %}">Back to Dashboard</a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Suspicious Count</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email|default:'-' }}</td>
+                        <td>
+                            {% if user.is_banned %}
+                                <span class="pill red">Banned</span>
+                            {% else %}
+                                <span class="pill green">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.suspicious_activity_count }}</td>
+                        <td>
+                            <form method="post" action="{% url 'admin_user_toggle_ban' user.id %}">
+                                {% csrf_token %}
+                                <button class="btn {% if user.is_banned %}secondary{% else %}warning{% endif %}" type="submit">
+                                    {% if user.is_banned %}Unban{% else %}Ban{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No users found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

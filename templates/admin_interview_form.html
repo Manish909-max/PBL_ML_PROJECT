@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if interview %}Edit Interview{% else %}Create Interview{% endif %}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .topbar { background: #111827; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .nav a { color: #d1d5db; text-decoration: none; margin-left: 16px; }
+        .container { max-width: 760px; margin: 36px auto; background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); padding: 24px; }
+        form { display: grid; gap: 14px; }
+        input, select, textarea, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; }
+        textarea { min-height: 180px; resize: vertical; }
+        button { background: #2563eb; color: white; font-weight: bold; border: none; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div style="font-weight:bold;">MockInterview Admin</div>
+        <div class="nav">
+            <a href="{% url 'admin_dashboard' %}">Overview</a>
+            <a href="{% url 'admin_interviews' %}">Interviews</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>{% if interview %}Edit Interview{% else %}Create Interview{% endif %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="title" value="{{ interview.title|default:'' }}" placeholder="Interview title" required>
+            <div class="row">
+                <select name="topic">
+                    <option value="backend" {% if interview and interview.topic == 'backend' %}selected{% endif %}>Backend Development</option>
+                    <option value="frontend" {% if interview and interview.topic == 'frontend' %}selected{% endif %}>Frontend Development</option>
+                    <option value="data_science" {% if interview and interview.topic == 'data_science' %}selected{% endif %}>Data Science</option>
+                    <option value="devops" {% if interview and interview.topic == 'devops' %}selected{% endif %}>DevOps</option>
+                </select>
+                <select name="difficulty">
+                    <option value="easy" {% if interview and interview.difficulty == 'easy' %}selected{% endif %}>Easy</option>
+                    <option value="medium" {% if interview and interview.difficulty == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="hard" {% if interview and interview.difficulty == 'hard' %}selected{% endif %}>Hard</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" name="duration_minutes" value="{{ interview.duration_minutes|default:30 }}" placeholder="Duration in minutes" min="10" required>
+                <select name="status">
+                    <option value="draft" {% if interview and interview.status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="active" {% if interview and interview.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="completed" {% if interview and interview.status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <label style="font-weight: bold; font-size: 14px;">Questions (One per line)</label>
+                <button type="button" id="btn-generate-ai" style="width: auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 8px 16px; font-size: 13px;">✨ Generate using Gemini AI</button>
+            </div>
+            <textarea id="questions_text" name="questions_text" placeholder="One question per line">{{ questions_text }}</textarea>
+            <button type="submit" style="margin-top: 10px;">Save Interview</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('btn-generate-ai').addEventListener('click', async () => {
+            const topicEl = document.querySelector('select[name="topic"]');
+            const difficultyEl = document.querySelector('select[name="difficulty"]');
+            const textarea = document.getElementById('questions_text');
+            const btn = document.getElementById('btn-generate-ai');
+            
+            const topic = topicEl.options[topicEl.selectedIndex].text;
+            const difficulty = difficultyEl.options[difficultyEl.selectedIndex].text;
+            
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch("{% url 'generate_questions_with_ai' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ topic, difficulty })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    textarea.value = data.questions_text;
+                } else {
+                    alert('Failed to generate questions: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Network error while connecting to AI generator.');
+            } finally {
+                btn.textContent = '✨ Generate using Gemini AI';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Daily Challenges - Admin</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%); color: #111827; }
+        .container { max-width: 1000px; margin: 48px auto; padding: 0 24px; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08); }
+        h1 { font-size: 28px; margin-bottom: 8px; color: #1a202c; }
+        .breadcrumb { font-size: 14px; color: #64748b; margin-bottom: 24px; }
+        .breadcrumb a { color: #2563eb; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        
+        .challenges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+        .challenge-section { padding: 20px; border: 2px solid #e2e8f0; border-radius: 12px; }
+        .challenge-section.easy { border-left: 4px solid #22c55e; background: #f0fdf4; }
+        .challenge-section.medium { border-left: 4px solid #f59e0b; background: #fffbeb; }
+        .challenge-section.hard { border-left: 4px solid #ef4444; background: #fef2f2; }
+        
+        .challenge-label { font-size: 14px; font-weight: bold; margin-bottom: 12px; }
+        .challenge-section.easy .challenge-label { color: #15803d; }
+        .challenge-section.medium .challenge-label { color: #b45309; }
+        .challenge-section.hard .challenge-label { color: #991b1b; }
+        
+        select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+        select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .current-selection { font-size: 13px; margin-top: 8px; color: #64748b; }
+        .current-selection strong { color: #1f2937; }
+        
+        .btn-section { display: flex; gap: 12px; margin-top: 32px; }
+        .btn { display: inline-block; padding: 12px 24px; border: none; border-radius: 10px; text-decoration: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-secondary:hover { background: #475569; }
+        
+        .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+        .info-box strong { color: #1e40af; }
+        
+        .success-message { background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-bottom: 24px; color: #166534; }
+        
+        .challenges-history { margin-top: 40px; }
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { background: #f8fafc; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+        .history-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .history-table tr:hover { background: #f8fafc; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-easy { background: #dcfce7; color: #166534; }
+        .badge-medium { background: #fef3c7; color: #92400e; }
+        .badge-hard { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="breadcrumb">
+                <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> > Set Daily Challenges
+            </div>
+            
+            <h1>⚙️ Set Daily Challenges</h1>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="success-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="info-box">
+                <strong>📅 Date:</strong> {{ today }}<br>
+                <small>Tip: These challenges will be available for all users today. You can update them anytime.</small>
+            </div>
+            
+            <form method="POST" action="{% url 'admin_set_daily_challenges' %}">
+                {% csrf_token %}
+                
+                <div class="challenges-grid">
+                    <!-- Easy Challenge -->
+                    <div class="challenge-section easy">
+                        <div class="challenge-label">🟢 Easy Challenge</div>
+                        <select name="easy_challenge_id" required>
+                            <option value="">-- Select Easy Challenge --</option>
+                            {% for challenge in easy_challenges %}
+                                <option value="{{ challenge.id }}" {% if daily_rotation.easy_challenge.id == challenge.id %}selected{% endif %}>
+                                    {{ challenge.title }}
+                                </option>
+                            {% empty %}
+                                <option disabled>No easy challenges available</option>
+                            {% endfor %}
+                        </select>
+                        {% if daily_rotation.easy_challenge %}
+                            <div class="current-selection">
+                                ✓ Currently selected: <strong>{{ daily_rotation.easy_challenge.title }}</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Medium Challenge -->
+                    <div class="challenge-section medium">
+                        <div class="challenge-label">🟡 Medium Challenge</div>
+                        <select name="medium_challenge_id" required>
+                            <option value="">-- Select Medium Challenge --</option>
+                            {% for challenge in medium_challenges %}
+                                <option value="{{ challenge.id }}" {% if daily_rotation.medium_challenge.id == challenge.id %}selected{% endif %}>
+                                    {{ challenge.title }}
+                                </option>
+                            {% empty %}
+                                <option disabled>No medium challenges available</option>
+                            {% endfor %}
+                        </select>
+                        {% if daily_rotation.medium_challenge %}
+                            <div class="current-selection">
+                                ✓ Currently selected: <strong>{{ daily_rotation.medium_challenge.title }}</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Hard Challenge -->
+                    <div class="challenge-section hard">
+                        <div class="challenge-label">🔴 Hard Challenge</div>
+                        <select name="hard_challenge_id" required>
+                            <option value="">-- Select Hard Challenge --</option>
+                            {% for challenge in hard_challenges %}
+                                <option value="{{ challenge.id }}" {% if daily_rotation.hard_challenge.id == challenge.id %}selected{% endif %}>
+                                    {{ challenge.title }}
+                                </option>
+                            {% empty %}
+                                <option disabled>No hard challenges available</option>
+                            {% endfor %}
+                        </select>
+                        {% if daily_rotation.hard_challenge %}
+                            <div class="current-selection">
+                                ✓ Currently selected: <strong>{{ daily_rotation.hard_challenge.title }}</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="btn-section">
+                    <button type="submit" class="btn btn-primary">💾 Set Today's Challenges</button>
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+            
+            <!-- Statistics -->
+            {% if daily_rotation %}
+            <div class="challenges-history">
+                <h3>📊 Today's Challenge Statistics</h3>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Difficulty</th>
+                            <th>Challenge Title</th>
+                            <th>Timer</th>
+                            <th>Test Cases</th>
+                            <th>Set By</th>
+                            <th>Updated At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if daily_rotation.easy_challenge %}
+                        <tr>
+                            <td><span class="badge badge-easy">Easy</span></td>
+                            <td>{{ daily_rotation.easy_challenge.title }}</td>
+                            <td>{{ daily_rotation.easy_challenge.timer_minutes }} min</td>
+                            <td>{{ daily_rotation.easy_challenge.test_cases|length }} tests</td>
+                            <td>{{ daily_rotation.created_by.username }}</td>
+                            <td>{{ daily_rotation.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        
+                        {% if daily_rotation.medium_challenge %}
+                        <tr>
+                            <td><span class="badge badge-medium">Medium</span></td>
+                            <td>{{ daily_rotation.medium_challenge.title }}</td>
+                            <td>{{ daily_rotation.medium_challenge.timer_minutes }} min</td>
+                            <td>{{ daily_rotation.medium_challenge.test_cases|length }} tests</td>
+                            <td>{{ daily_rotation.created_by.username }}</td>
+                            <td>{{ daily_rotation.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        
+                        {% if daily_rotation.hard_challenge %}
+                        <tr>
+                            <td><span class="badge badge-hard">Hard</span></td>
+                            <td>{{ daily_rotation.hard_challenge.title }}</td>
+                            <td>{{ daily_rotation.hard_challenge.timer_minutes }} min</td>
+                            <td>{{ daily_rotation.hard_challenge.test_cases|length }} tests</td>
+                            <td>{{ daily_rotation.created_by.username }}</td>
+                            <td>{{ daily_rotation.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="info-box" style="margin-top: 32px; background: #fef2f2; border-color: #fecaca;">
+                <strong style="color: #991b1b;">⚠️ No challenges set for today yet</strong><br>
+                <small>Select challenges above and click "Set Today's Challenges" to enable daily challenge submissions.</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

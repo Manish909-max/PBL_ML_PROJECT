@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mock Interview Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8f9fa; color: #1a1a1a; line-height: 1.6; }
+        
+        header { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .navbar { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
+        nav { display: flex; align-items: center; }
+        nav a { margin-left: 24px; text-decoration: none; color: #666; transition: color 0.3s; font-size: 14px; }
+        nav a:hover { color: #2563eb; }
+        .auth-buttons { margin-left: 24px; }
+        .auth-buttons a { display: inline-block; padding: 8px 16px; background: #2563eb; color: white; border-radius: 6px; margin-left: 8px; text-decoration: none; font-size: 14px; }
+        .auth-buttons a:hover { background: #1d4ed8; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+        
+        .hero { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 48px; border-radius: 12px; text-align: center; margin-bottom: 48px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2); }
+        .hero h1 { font-size: 36px; margin-bottom: 16px; }
+        .hero p { font-size: 18px; opacity: 0.95; }
+        
+        .section-title { font-size: 28px; margin: 32px 0 24px; font-weight: bold; color: #1a1a1a; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        
+        .card { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        
+        .card h3 { font-size: 20px; margin-bottom: 12px; color: #1a1a1a; }
+        .card p { color: #666; margin-bottom: 8px; font-size: 14px; }
+        .badge { display: inline-block; background: #e0e7ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 8px; margin-bottom: 12px; }
+        
+        .btn { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; transition: background 0.3s; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+        .empty-state p { margin-bottom: 16px; }
+        
+        .session-item { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .session-header { display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-completed { background: #d1fae5; color: #047857; }
+        .status-in_progress { background: #fef3c7; color: #d97706; }
+        .status-not_started { background: #f3f4f6; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="logo">📝 MockInterview AI</div>
+            <nav>
+                <a href="{% url 'home' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}">Dashboard</a>
+                    <a href="{% url 'daily_challenge' %}" style="color: #10b981; font-weight: 600;">📝 Daily Challenge</a>
+                    <a href="{% url 'logout' %}">Logout ({{ user.username }})</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin_dashboard' %}" style="color: #dc2626; font-weight: bold;">Admin Dashboard</a>
+                    {% endif %}
+                {% else %}
+                    <div class="auth-buttons">
+                        <a href="{% url 'login' %}">Login</a>
+                        <a href="{% url 'signup' %}">Sign Up</a>
+                    </div>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🎯 AI-Powered Mock Interviews</h1>
+            <p>Practice realistic technical interviews. Get instant feedback. Improve your skills.</p>
+        </div>
+
+        {% if user.is_authenticated and user_sessions %}
+            <h2 class="section-title">Your Recent Sessions</h2>
+            <div style="max-width: 600px; margin-bottom: 40px;">
+                {% for session in user_sessions %}
+                    <div class="session-item">
+                        <div class="session-header">
+                            <div>
+                                <strong>{{ session.interview_template.title }}</strong>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">{{ session.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <span class="status-badge status-{{ session.status }}">{{ session.get_status_display }}</span>
+                        </div>
+                        {% if session.status == 'in_progress' %}
+                            <a href="{% url 'interview_session' session.id %}" class="btn" style="margin-top: 12px; display: inline-block;">Resume</a>
+                        {% elif session.status == 'completed' %}
+                            <a href="{% url 'interview_summary' session.id %}" class="btn" style="margin-top: 12px; display: inline-block;">View Summary</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <h2 class="section-title">Available Interviews</h2>
+        {% if interviews %}
+            <div class="grid">
+                {% for interview in interviews %}
+                    <div class="card">
+                        <h3>{{ interview.title }}</h3>
+                        <div>
+                            <span class="badge">{{ interview.get_topic_display }}</span>
+                            <span class="badge">{{ interview.get_difficulty_display }}</span>
+                        </div>
+                        <p><strong>Duration:</strong> {{ interview.duration_minutes }} minutes</p>
+                        <p><strong>Questions:</strong> {{ interview.question_set.count }}</p>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'start_interview' interview.pk %}" class="btn">Start Interview</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn">Login to Start</a>
+                        {% endif %}
+                        <a href="{% url 'interview_detail' interview.pk %}" class="btn btn-secondary" style="margin-left: 8px;">Details</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No interviews available yet. Check back soon!</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if challenge %}Edit Challenge{% else %}Create Challenge{% endif %}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .topbar { background: #111827; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .nav a { color: #d1d5db; text-decoration: none; margin-left: 16px; }
+        .container { max-width: 820px; margin: 36px auto; background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); padding: 24px; }
+        form { display: grid; gap: 14px; }
+        input, select, textarea, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; }
+        textarea { min-height: 160px; resize: vertical; }
+        button { background: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; }
+        button:hover { background: #1d4ed8; }
+        .error { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+        .test-case-section { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin-top: 12px; }
+        .test-case { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .test-case input { margin-bottom: 8px; }
+        .btn-small { background: #ef4444; font-size: 12px; padding: 8px 12px; width: auto; margin-top: 8px; }
+        .btn-small:hover { background: #dc2626; }
+        .btn-add { background: #10b981; width: 100%; margin-top: 12px; }
+        .btn-add:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div style="font-weight:bold;">MockInterview Admin</div>
+        <div class="nav">
+            <a href="{% url 'admin_dashboard' %}">Overview</a>
+            <a href="{% url 'admin_challenges' %}">Challenges</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>{% if challenge %}Edit Challenge{% else %}Create Challenge{% endif %}</h2>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="post" id="challengeForm">
+            {% csrf_token %}
+            <input type="text" name="title" value="{{ challenge.title|default:'' }}" placeholder="Challenge title" required>
+            <select name="difficulty">
+                <option value="easy" {% if challenge and challenge.difficulty == 'easy' %}selected{% endif %}>Easy</option>
+                <option value="medium" {% if challenge and challenge.difficulty == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="hard" {% if challenge and challenge.difficulty == 'hard' %}selected{% endif %}>Hard</option>
+            </select>
+            <textarea name="description" placeholder="Problem description" required>{{ challenge.description|default:'' }}</textarea>
+            <textarea name="starter_code" placeholder="Starter code (Python, JavaScript, Java, C++, Go, Rust)">{{ challenge.starter_code|default:'' }}</textarea>
+            <textarea name="expected_keywords" placeholder="Expected keywords, comma separated">{{ challenge.expected_keywords|default:'' }}</textarea>
+            
+            <div class="test-case-section">
+                <h3 style="margin-top: 0;">📋 Test Cases (Input → Expected Output)</h3>
+                <div id="testCasesContainer">
+                    {% if challenge.test_cases %}
+                        {% for test in challenge.test_cases %}
+                            <div class="test-case">
+                                <input type="text" class="test-input" placeholder="Input" value="{{ test.input }}" required>
+                                <input type="text" class="test-output" placeholder="Expected Output" value="{{ test.output }}" required>
+                                <button type="button" class="btn-small" onclick="removeTestCase(this)">Remove</button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="btn-add" onclick="addTestCase()">+ Add Test Case</button>
+            </div>
+            
+            <input type="hidden" name="test_cases" id="testCasesInput" value='{{ challenge.test_cases|safe|default:"[]" }}'>
+            
+            <button type="submit">Save Challenge</button>
+        </form>
+    </div>
+
+    <script>
+        const challengeForm = document.getElementById('challengeForm');
+        const testCasesContainer = document.getElementById('testCasesContainer');
+        const testCasesInput = document.getElementById('testCasesInput');
+
+        function addTestCase() {
+            const testCase = document.createElement('div');
+            testCase.className = 'test-case';
+            testCase.innerHTML = `
+                <input type="text" class="test-input" placeholder="Input" required>
+                <input type="text" class="test-output" placeholder="Expected Output" required>
+                <button type="button" class="btn-small" onclick="removeTestCase(this)">Remove</button>
+            `;
+            testCasesContainer.appendChild(testCase);
+        }
+
+        function removeTestCase(btn) {
+            btn.parentElement.remove();
+        }
+
+        challengeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Collect test cases
+            const testCases = [];
+            document.querySelectorAll('.test-case').forEach((testCase) => {
+                const input = testCase.querySelector('.test-input').value;
+                const output = testCase.querySelector('.test-output').value;
+                if (input && output) {
+                    testCases.push({ input, output });
+                }
+            });
+
+            // Set the hidden input
+            testCasesInput.value = JSON.stringify(testCases);
+
+            // Submit form
+            challengeForm.submit();
+        });
+    </script>
+</body>
+</html>

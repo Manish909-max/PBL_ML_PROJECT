@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Banned Users - Admin</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .topbar { background: #111827; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .nav a { color: #d1d5db; text-decoration: none; margin-left: 16px; cursor: pointer; }
+        .nav a:hover { text-decoration: underline; }
+        .container { max-width: 1000px; margin: 36px auto; background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); padding: 24px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #e5e7eb; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        tr:hover { background: #f9fafb; }
+        .btn { display: inline-block; padding: 8px 12px; background: #2563eb; color: white; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; font-size: 12px; }
+        .btn-danger { background: #ef4444; }
+        .btn-success { background: #10b981; }
+        .btn:hover { opacity: 0.8; }
+        .empty { text-align: center; color: #6b7280; padding: 40px; }
+        .badge { display: inline-block; padding: 4px 8px; background: #fee2e2; color: #7f1d1d; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div style="font-weight:bold;">MockInterview Admin - Challenge Bans</div>
+        <div class="nav">
+            <a href="{% url 'admin_dashboard' %}">Overview</a>
+            <a href="{% url 'admin_users' %}">Users</a>
+            <a href="{% url 'admin_challenge_banned_users' %}" style="color: #10b981; font-weight: bold;">Challenge Bans</a>
+            <a href="{% url 'admin_interviews' %}">Interviews</a>
+            <a href="{% url 'admin_challenges' %}">Challenges</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🚫 Users Banned from Daily Challenges</h2>
+        
+        {% if banned_users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Ban Reason</th>
+                        <th>Banned At</th>
+                        <th>Banned By</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in banned_users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.username }}</strong>
+                                <span class="badge">BANNED</span>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.challenge_ban_reason }}</td>
+                            <td>{{ user.challenge_banned_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ user.challenge_banned_by.username|default:"System" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'admin_unban_from_challenges' user.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">Unban</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">
+                <h3>✅ No Users Banned</h3>
+                <p>All users are in good standing.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
