@@ -1,4 +1,4 @@
-# LeetCode-Style Daily Challenges - Solutions Reference
+
 
 ## Overview
 The mock interview platform now includes 3 daily coding challenges with:
