@@ -29,21 +29,7 @@ Explanation: nums[0] + nums[1] == 9, so we return [0, 1]
 ```python
 from typing import List
 
-class Solution:
-    def twoSum(self, nums: List[int], target: int) -> List[int]:
-        # Use a hash map to store values we've already seen
-        num_map = {}
-        
-        for i, num in enumerate(nums):
-            # Calculate what number we need to reach the target
-            complement = target - num
-            
-            # Check if we've already seen the complement
-            if complement in num_map:
-                return [num_map[complement], i]
-            
-            # Store this number and its index for future lookups
-            num_map[num] = i
+
         
         return []  # No solution found
 ```
